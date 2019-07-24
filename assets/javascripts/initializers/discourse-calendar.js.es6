@@ -19,6 +19,15 @@ function stringToHexColor(str) {
   return hex;
 }
 
+function loadCalendarSource() {
+  return Promise.all([
+      '/plugins/discourse-calendar/fullcalendar-4.2.0/packages/core/main.min.js',
+      '/plugins/discourse-calendar/fullcalendar-4.2.0/packages/moment/main.min.js',
+      '/plugins/discourse-calendar/fullcalendar-4.2.0/packages/moment-timezone/main.min.js',
+      '/plugins/discourse-calendar/fullcalendar-4.2.0/packages/interaction/main.min.js',
+  ].map(src => loadScript(src)));
+}
+
 function initializeDiscourseCalendar(api) {
   let _topicController;
 
@@ -34,11 +43,8 @@ function initializeDiscourseCalendar(api) {
     const $calendar = $op.find(".calendar").first();
 
     if (post && $calendar.length > 0) {
-      ajax(`/posts/${post.id}.json`).then(post => {
-        loadScript(
-          "/plugins/discourse-calendar/javascripts/fullcalendar-with-moment-timezone.min.js"
-        ).then(() => render($calendar, post));
-      });
+      ajax(`/posts/${post.id}.json`).then(post =>
+          loadCalendarSource().then(() => render($calendar, post)));
     }
   });
 
@@ -65,9 +71,7 @@ function initializeDiscourseCalendar(api) {
       return;
     }
 
-    loadScript(
-      "/plugins/discourse-calendar/javascripts/fullcalendar-with-moment-timezone.min.js"
-    ).then(() => render($calendar, helper.getModel()));
+    loadCalendarSource().then(() => render($calendar, helper.getModel()));
   }
 
   function _buildCalendar($calendar) {
@@ -95,6 +99,12 @@ function initializeDiscourseCalendar(api) {
         left: "prev,next today",
         center: "title",
         right: "month,basicWeek,listNextYear"
+      },
+
+      plugins: [ 'interaction'],
+      selectable: true,
+      select: function(info) {
+        alert('selected ' + info.startStr + ' to ' + info.endStr);
       }
     });
   }
